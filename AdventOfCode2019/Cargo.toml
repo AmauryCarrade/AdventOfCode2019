@@ -1,0 +1,17 @@
+[package]
+name = "AdventOfCode2019"
+version = "0.1.0"
+authors = ["Amaury Carrade <amaury@carrade.eu>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[lib]
+name = "lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "advent-of-code-2019"
+path = "src/main.rs"
