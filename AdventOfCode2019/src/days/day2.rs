@@ -11,7 +11,7 @@ pub fn run() {
     program.patch(2, 2);
 
     match program.execute() {
-        Ok(output) => println!("Position zero: {}", output),
+        Ok(output) => println!("[1] Output: {}", output),
         Err(e) => println!("{:?}", e),
     }
 
@@ -25,7 +25,7 @@ pub fn run() {
 
         match program.execute() {
             Ok(output) if output == MOON_LANDING => println!(
-                "Found noun = {} and verb = {}; result = {}",
+                "[2] Found noun = {} and verb = {}; result: {}",
                 noun,
                 verb,
                 100 * noun + verb

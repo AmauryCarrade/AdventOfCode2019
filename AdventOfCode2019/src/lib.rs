@@ -5,8 +5,7 @@ use std::io::{BufRead, BufReader};
 
 pub mod intcode_program;
 
-pub mod day1;
-pub mod day2;
+pub mod days;
 
 ///
 /// Loads the input from the sources directory. Files have to be in
