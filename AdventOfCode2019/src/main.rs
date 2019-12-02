@@ -8,6 +8,7 @@ fn main() {
 
     match day {
         1 => lib::day1::run(),
-        _ => panic!("Nothing for this day")
+        2 => lib::day2::run(),
+        _ => panic!("Nothing for this day"),
     };
 }
