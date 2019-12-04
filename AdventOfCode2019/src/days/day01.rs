@@ -1,4 +1,4 @@
-use crate::input;
+use crate::{first_answer, input, second_answer};
 
 pub fn run() {
     let input: Vec<i32> = input(1, false)
@@ -18,8 +18,8 @@ pub fn run() {
         })
         .sum();
 
-    println!("[1] Naive fuel mass: {mass}", mass = fuel_mass);
-    println!("[2] Real fuel mass: {mass}", mass = real_fuel_mass);
+    first_answer("Naive fuel mass", &fuel_mass);
+    second_answer("Real fuel mass", &real_fuel_mass);
 }
 
 fn compute_fuel_naive(mass: i32) -> i32 {

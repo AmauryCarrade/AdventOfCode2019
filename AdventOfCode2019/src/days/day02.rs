@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
-use crate::input;
 use crate::intcode_program::Program;
+use crate::{first_answer, input, second_answer};
 
 pub fn run() {
     let source_code_raw = input(2, false).get(0).expect("Input file is empty").clone();
@@ -11,7 +11,7 @@ pub fn run() {
     program.patch(2, 2);
 
     match program.execute() {
-        Ok(output) => println!("[1] Output: {}", output),
+        Ok(output) => first_answer("Program output", &output),
         Err(e) => println!("{:?}", e),
     }
 
@@ -24,11 +24,9 @@ pub fn run() {
         program.patch(2, verb);
 
         match program.execute() {
-            Ok(output) if output == MOON_LANDING => println!(
-                "[2] Found noun = {} and verb = {}; result: {}",
-                noun,
-                verb,
-                100 * noun + verb
+            Ok(output) if output == MOON_LANDING => second_answer(
+                format!("Found noun = {} and verb = {}, so", noun, verb).as_str(),
+                &(100 * noun + verb),
             ),
             Ok(_) => (),
             Err(e) => println!("{:?}", e),

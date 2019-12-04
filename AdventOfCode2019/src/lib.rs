@@ -2,6 +2,7 @@ extern crate itertools;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::fmt::Display;
 
 pub mod intcode_program;
 
@@ -36,4 +37,16 @@ fn input(day: u8, bonus: bool) -> Vec<String> {
         })
         .filter(|l| !l.is_empty())
         .collect()
+}
+
+fn answer(num: u8, label: &str, val: &dyn Display) {
+    println!("{} - {}: {}", num, label, val)
+}
+
+fn first_answer(label: &str, val: &dyn Display) {
+    answer(1, label, val)
+}
+
+fn second_answer(label: &str, val: &dyn Display) {
+    answer(2, label, val)
 }

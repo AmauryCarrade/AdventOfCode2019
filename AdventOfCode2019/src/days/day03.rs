@@ -1,4 +1,4 @@
-use crate::input;
+use crate::{first_answer, input, second_answer};
 
 use std::collections::HashSet;
 use std::ops;
@@ -69,9 +69,7 @@ impl FromStr for WirePart {
                 'R' => Vector { x: 1, y: 0 },
                 _ => panic!("Invalid wire part: unknown direction"),
             },
-            length: s[1..]
-                .parse::<u32>()
-                .expect("Invalid wire part: NaN"),
+            length: s[1..].parse::<u32>().expect("Invalid wire part: NaN"),
         })
     }
 }
@@ -163,10 +161,6 @@ pub fn run() {
         .min()
         .unwrap();
 
-    println!(
-        "[1] Distance to the closest intersection: {}",
-        min_manhattan
-    );
-
-    println!("[2] Minimal combined steps (signal): {:?}", min_signal);
+    first_answer("Distance to the closest intersection", &min_manhattan);
+    second_answer("Minimal combined steps (signal)", &min_signal);
 }
