@@ -7,9 +7,9 @@ fn main() {
     let day: u8 = args[1].parse::<u8>().expect("Invalid day number");
 
     match day {
-        1 => lib::days::day1::run(),
-        2 => lib::days::day2::run(),
-        3 => lib::days::day3::run(),
+        1 => lib::days::day01::run(),
+        2 => lib::days::day02::run(),
+        3 => lib::days::day03::run(),
         _ => eprintln!("Nothing for this day"),
     };
 }
