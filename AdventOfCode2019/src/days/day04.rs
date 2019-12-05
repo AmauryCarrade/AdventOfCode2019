@@ -7,7 +7,7 @@ const RANGE: Range<u32> = 256_310..732_737;
 
 pub fn run() {
     first_answer(
-        "Number of possible passwords (mathematical solution)",
+        "Number of possible passwords",
         &RANGE
             .filter(ordered_numbers)
             .filter(|i| number_groups_sizes_match(i, |n| n >= 2))

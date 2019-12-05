@@ -1,10 +1,10 @@
 extern crate itertools;
 
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::fmt::Display;
 
-pub mod intcode_program;
+pub mod intcode;
 
 pub mod days;
 
@@ -12,15 +12,8 @@ pub mod days;
 /// Loads the input from the sources directory. Files have to be in
 /// /input/day-12-2.txt for day 12 problem 2 (and the same for others).
 ///
-fn input(day: u8, bonus: bool) -> Vec<String> {
-    let filename = format!(
-        "input/day-{day}-{bonus}.txt",
-        day = day,
-        bonus = match bonus {
-            true => 2,
-            false => 1,
-        }
-    );
+fn input(day: u8) -> Vec<String> {
+    let filename = format!("input/day-{day}.txt", day = day);
 
     let file = File::open(&filename).expect(
         format!(
@@ -39,7 +32,7 @@ fn input(day: u8, bonus: bool) -> Vec<String> {
         .collect()
 }
 
-fn answer(num: u8, label: &str, val: &dyn Display) {
+fn answer(num: usize, label: &str, val: &dyn Display) {
     println!("{} - {}: {}", num, label, val)
 }
 

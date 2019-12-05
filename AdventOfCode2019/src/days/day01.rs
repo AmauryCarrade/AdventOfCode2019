@@ -1,7 +1,7 @@
 use crate::{first_answer, input, second_answer};
 
 pub fn run() {
-    let input: Vec<i32> = input(1, false)
+    let input: Vec<i32> = input(1)
         .iter()
         .map(|mass_str| mass_str.parse::<i32>().expect("Invalid number in input!"))
         .collect();

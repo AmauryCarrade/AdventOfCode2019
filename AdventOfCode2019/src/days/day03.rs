@@ -138,7 +138,7 @@ impl Wire {
 }
 
 pub fn run() {
-    let wires = input(3, false)
+    let wires = input(3)
         .iter()
         .map(|wire_data| wire_data.parse().expect("Invalid wire data"))
         .collect();
