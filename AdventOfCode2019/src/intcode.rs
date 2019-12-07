@@ -6,7 +6,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub struct Error {
-    message: &'static str,
+    pub message: &'static str,
 }
 
 /// An instruction of the program, containing the opcode and
@@ -95,6 +95,10 @@ pub struct Program {
 
     /// The outputs from the Output opcode.
     output: Vec<i64>,
+
+    /// True if the program is running (stays true if the program
+    /// is executed until next output).
+    running: bool,
 }
 
 impl FromStr for Program {
@@ -126,6 +130,7 @@ impl FromStr for Program {
                 }),
                 input_count: 0,
                 output: vec![],
+                running: false,
             }),
             Err(_) => Err(Error {
                 message: "Invalid source code: invalid numbers.",
@@ -194,13 +199,49 @@ impl Program {
         self.pointer = 0;
     }
 
+    pub fn is_running(&self) -> bool {
+        self.running
+    }
+
     /// Executes the program, and returns the output of
     /// its execution.
     pub fn execute(&mut self) -> Result<Vec<i64>> {
-        self.reset();
+        self.execute0(false)
+    }
+
+    /// Executes the program until the next output, then
+    /// pauses it and returns the last output.
+    /// To resume the program, call this same function
+    /// again until `is_running()` is false.
+    pub fn execute_until_next_output(&mut self) -> Result<i64> {
+        self.execute0(true)
+            .map(|outputs| outputs.last().cloned())
+            .map_or_else(
+                |error| Err(error),
+                |output| {
+                    output.ok_or(Error {
+                        message: "No output",
+                    })
+                },
+            )
+    }
+
+    fn execute0(&mut self, until_next_output: bool) -> Result<Vec<i64>> {
+        if !self.running {
+            self.reset();
+        }
+
+        self.running = true;
 
         loop {
+            let output_len = self.output.len();
+
             if !self.forward()? {
+                self.running = false;
+                break Ok(self.output());
+            }
+
+            if self.output.len() > output_len && until_next_output {
                 break Ok(self.output());
             }
         }

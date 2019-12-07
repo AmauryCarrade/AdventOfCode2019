@@ -1,3 +1,5 @@
+#![feature(result_map_or_else)]
+
 extern crate itertools;
 
 use std::fmt::Display;
