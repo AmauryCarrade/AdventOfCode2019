@@ -15,6 +15,7 @@ fn main() {
         6 => lib::days::day06::run(),
         7 => lib::days::day07::run(),
         8 => lib::days::day08::run(),
+        9 => lib::days::day09::run(),
         _ => eprintln!("Nothing for this day"),
     };
 }

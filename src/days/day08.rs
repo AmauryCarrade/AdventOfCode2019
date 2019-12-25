@@ -1,6 +1,6 @@
 use crate::{first_answer, input, second_answer};
 use itertools::Itertools;
-use std::fmt::{Display, Formatter, Error, Write};
+use std::fmt::{Display, Error, Formatter, Write};
 
 #[derive(Debug)]
 struct SpaceImage {
@@ -60,7 +60,7 @@ impl SpaceImage {
                     .cloned()
                     .fold(2, |final_pix, pix| match final_pix {
                         0 | 1 => final_pix,
-                        _ => pix
+                        _ => pix,
                     })
             })
             .collect()
@@ -69,13 +69,19 @@ impl SpaceImage {
 
 impl Display for SpaceImage {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        self.pixels().iter().chunks(self.width).into_iter().for_each(|line| {
-            line.into_iter().map(|pixel| match pixel {
-                1 => '×',
-                _ => ' ',
-            }).for_each(|pixel| f.write_char(pixel).expect("Cannot write space image pixel"));
-            f.write_str("\n").expect("Cannot write space image line");
-        });
+        self.pixels()
+            .iter()
+            .chunks(self.width)
+            .into_iter()
+            .for_each(|line| {
+                line.into_iter()
+                    .map(|pixel| match pixel {
+                        1 => '×',
+                        _ => ' ',
+                    })
+                    .for_each(|pixel| f.write_char(pixel).expect("Cannot write space image pixel"));
+                f.write_str("\n").expect("Cannot write space image line");
+            });
 
         Ok(())
     }

@@ -33,6 +33,11 @@ enum ParameterMode {
 
     /// The parameter's value is its data, directly.
     Immediate,
+
+    /// The parameter's value is the value stored at it's
+    /// data interpreted as a relative pointer from the
+    /// current relative base.
+    Relative,
 }
 
 /// OpCodes specify the purpose of each instruction in the program.
@@ -57,6 +62,8 @@ enum OpCode {
     /// the closure; 0 else.
     Test(Box<dyn Fn(i64, i64) -> bool>),
 
+    AdjustRelativeBase,
+
     /// Halts the program.
     Halt,
 }
@@ -72,9 +79,9 @@ enum Operation {
 
 /// The Intcode program interpreter.
 ///
-/// For references, see [days two](https://adventofcode.com/2019/day/2)
-/// and [five](https://adventofcode.com/2019/day/5) of 2019's Advent of
-/// Code.
+/// For references, see [days two](https://adventofcode.com/2019/day/2),
+/// [five](https://adventofcode.com/2019/day/5) and
+/// [nine](https://adventofcode.com/2019/day/9) of 2019's Advent of Code.
 pub struct Program {
     /// The program's memory. It stores both the instructions
     /// (source code) to execute, and the data (“variables”)
@@ -83,6 +90,9 @@ pub struct Program {
 
     /// The current pointer in the program's execution.
     pointer: usize,
+
+    /// The current relative base for relative mode.
+    relative_base: usize,
 
     /// An input source for the Input opcode. It's a closure
     /// receiving a number, incremented each time an input is
@@ -114,6 +124,7 @@ impl FromStr for Program {
             Ok(memory) => Ok(Program {
                 memory,
                 pointer: 0,
+                relative_base: 0,
                 input_source: Box::new(|_| {
                     let mut buffer = String::new();
                     match io::stdin().read_to_string(&mut buffer) {
@@ -143,28 +154,55 @@ impl Program {
     /// Patches the program, replacing the value at
     /// the given address by the given new value.
     pub fn patch(&mut self, address: usize, value: i64) {
-        self.memory[address] = value;
+        self.set(address, value);
     }
 
     /// Returns the value stored into the program's
-    /// memory at the given index. If the address is
-    /// invalid, returns None.
+    /// memory at the given index. If the address is out
+    /// of the current memory, returns 0.
     pub fn get(&self, address: usize) -> Option<i64> {
-        self.memory.get(address).cloned()
+        Some(self.memory.get(address).cloned().unwrap_or(0))
     }
 
-    /// Retrieves the value of a parameter, according to
-    /// its mode.
+    /// Sets the value at the address, expanding the
+    /// memory if needed.
+    fn set(&mut self, address: usize, value: i64) {
+        // If the address is out of the current allocated memory, we
+        // have to expand it.
+        if self.memory.len() <= address {
+            self.memory.reserve(address - self.memory.len());
+            (self.memory.len()..address).for_each(|_| self.memory.push(0));
+            self.memory.push(value);
+        } else {
+            self.memory[address] = value;
+        }
+    }
+
+    /// Retrieves the value of a parameter, according to its mode.
     ///
     /// instruction: the instruction where the parameter is.
     /// parameter: the parameter index in the instruction (starts at zero).
     fn get_parameter(&self, instruction: &Instruction, parameter: usize) -> Option<i64> {
         match instruction.parameters.get(parameter) {
             Some(parameter) => match parameter.mode {
-                ParameterMode::Position => self.memory.get(parameter.data as usize).cloned(),
+                ParameterMode::Position => self.get(parameter.data as usize),
+                ParameterMode::Relative => {
+                    self.get((self.relative_base as isize + parameter.data as isize) as usize)
+                }
                 ParameterMode::Immediate => Some(parameter.data),
             },
             None => None,
+        }
+    }
+
+    /// Interprets the parameter as an address, taking into account the
+    /// relative mode.
+    fn get_address(&self, parameter: &Parameter) -> usize {
+        match parameter.mode {
+            ParameterMode::Relative => {
+                (self.relative_base as isize + parameter.data as isize) as usize
+            }
+            _ => parameter.data as usize,
         }
     }
 
@@ -275,8 +313,10 @@ impl Program {
                     Some(operand1) => match self.get_parameter(&instruction, 1) {
                         Some(operand2) => match instruction.parameters.get(2) {
                             Some(result_address) => {
-                                self.memory[result_address.data as usize] =
-                                    self.compute_operation(*operation, operand1, operand2);
+                                self.set(
+                                    self.get_address(result_address),
+                                    self.compute_operation(*operation, operand1, operand2),
+                                );
                                 Ok(true)
                             }
                             None => Err(Error {
@@ -294,7 +334,7 @@ impl Program {
                 OpCode::Input => match instruction.parameters.get(0) {
                     Some(input_address) => match self.request_input() {
                         Ok(input) => {
-                            self.memory[input_address.data as usize] = input;
+                            self.set(self.get_address(input_address), input);
                             Ok(true)
                         }
                         Err(e) => Err(e),
@@ -331,8 +371,10 @@ impl Program {
                     Some(operand1) => match self.get_parameter(&instruction, 1) {
                         Some(operand2) => match instruction.parameters.get(2) {
                             Some(test_result_address) => {
-                                self.memory[test_result_address.data as usize] =
-                                    if condition(operand1, operand2) { 1 } else { 0 };
+                                self.set(
+                                    self.get_address(test_result_address),
+                                    if condition(operand1, operand2) { 1 } else { 0 },
+                                );
                                 Ok(true)
                             }
                             None => Err(Error {
@@ -345,6 +387,16 @@ impl Program {
                     },
                     None => Err(Error {
                         message: "Invalid first parameter pointer in test (7|8)",
+                    }),
+                },
+                OpCode::AdjustRelativeBase => match self.get_parameter(&instruction, 0) {
+                    Some(relative_base) => {
+                        self.relative_base =
+                            (self.relative_base as isize + relative_base as isize) as usize;
+                        Ok(true)
+                    }
+                    None => Err(Error {
+                        message: "Invalid parameter in adjust_relative_base (9)",
                     }),
                 },
                 OpCode::Halt => Ok(false),
@@ -365,6 +417,7 @@ impl Program {
             6 => Ok((OpCode::Jump(Box::new(|p| p == 0)), 2)),
             7 => Ok((OpCode::Test(Box::new(|a, b| a < b)), 3)),
             8 => Ok((OpCode::Test(Box::new(|a, b| a == b)), 3)),
+            9 => Ok((OpCode::AdjustRelativeBase, 1)),
             99 => Ok((OpCode::Halt, 0)),
             _ => {
                 println!(
@@ -400,6 +453,7 @@ impl Program {
                                 mode: match mode {
                                     '0' => ParameterMode::Position,
                                     '1' => ParameterMode::Immediate,
+                                    '2' => ParameterMode::Relative,
                                     _ => ParameterMode::Position,
                                 },
                             })
